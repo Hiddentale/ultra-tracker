@@ -174,7 +174,7 @@ async function handleCreateRace(request, env) {
   return json({
     id,
     token,
-    viewer_url: `${VIEWER_BASE}?id=${id}`,
+    viewer_url: `${VIEWER_BASE}tracker.html?id=${id}`,
   }, 201, request);
 }
 

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls o:/Programming/ultra-tracker/*.html)"
+    ],
+    "additionalDirectories": [
+      "o:\\Programming\\ultra-tracker"
+    ]
+  }
+}

@@ -14,10 +14,13 @@ const API = {
     return res.json();
   },
 
-  async createRace(name, gpx, aidStations) {
+  async createRace(name, gpx, aidStations, adminSecret) {
     const res = await fetch(`${WORKER_URL}/api/race`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${adminSecret}`,
+      },
       body: JSON.stringify({ name, gpx, aid_stations: aidStations }),
     });
     if (!res.ok) {
