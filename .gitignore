@@ -1,0 +1,7 @@
+.DS_Store
+Thumbs.db
+*.swp
+node_modules/
+.wrangler/
+ULTRA-TRACKER-SPEC.md
+CLAUDE.md
