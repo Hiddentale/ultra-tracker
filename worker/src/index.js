@@ -121,6 +121,12 @@ function snapAidStations(aidStations, route) {
 // --- Route Handlers ---
 
 async function handleCreateRace(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const match = authHeader.match(/^Bearer\s+(.+)$/);
+  if (!match || match[1] !== env.ADMIN_SECRET) {
+    return error("Unauthorized", 401, request);
+  }
+
   let body;
   try {
     body = await request.json();
