@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(ls o:/Programming/ultra-tracker/*.html)"
+      "Bash(ls o:/Programming/ultra-tracker/*.html)",
+      "Read(//o/Programming/personal-website/**)",
+      "Bash(ls o:/Programming/ultra-tracker/*.html o:/Programming/ultra-tracker/css/ o:/Programming/ultra-tracker/js/)"
     ],
     "additionalDirectories": [
       "o:\\Programming\\ultra-tracker"
