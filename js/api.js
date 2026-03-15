@@ -33,6 +33,18 @@ const API = {
     return res.json();
   },
 
+  async deleteRace(raceId, adminSecret) {
+    const res = await fetch(`${WORKER_URL}/api/race/${raceId}`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${adminSecret}` },
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Failed to delete: ${res.status}`);
+    }
+    return res.json();
+  },
+
   async createRace(name, gpx, aidStations, adminSecret) {
     const res = await fetch(`${WORKER_URL}/api/race`, {
       method: "POST",

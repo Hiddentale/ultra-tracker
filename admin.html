@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/admin.css">
 </head>
+
 <body>
   <div class="card">
     <h1>RACE ADMIN</h1>
@@ -14,7 +16,8 @@
 
     <form id="auth-form">
       <input type="password" id="admin-secret" placeholder="Admin password" autocomplete="off" autofocus>
-      <button type="submit" class="btn btn-full">Enter</button>
+      <button type="submit" class="btn btn-full" id="submit-btn">Enter</button>
+      <p class="error" id="error"></p>
     </form>
 
     <div class="back-link">
@@ -22,6 +25,8 @@
     </div>
   </div>
 
+  <script src="js/api.js"></script>
   <script src="js/admin.js"></script>
 </body>
+
 </html>

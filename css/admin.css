@@ -40,6 +40,18 @@ form input {
   margin-bottom: 12px;
 }
 
+.error {
+  color: var(--red);
+  font-size: 0.85rem;
+  margin-top: 8px;
+  display: none;
+}
+
+.error.visible {
+  display: block;
+  animation: fadeIn 0.25s ease-out;
+}
+
 .back-link {
   margin-top: 20px;
   font-size: 0.8rem;

@@ -279,7 +279,7 @@ document.getElementById("create-btn").addEventListener("click", async () => {
     const steps = [
       { text: "1. Install ", linkText: "Overland", linkHref: "https://apps.apple.com/app/overland-gps-tracker/id1292426766", suffix: " from the App Store" },
       { text: "2. Set receiver endpoint to: ", code: endpoint },
-      { text: "3. Add HTTP header: ", code: `Authorization: Bearer ${result.token}` },
+      { text: "3. Paste the Auth Token above into the ", bold: "Access Token", suffix: " field" },
       { text: "4. Set tracking interval to ", bold: "30 seconds" },
       { text: "5. Set accuracy to ", bold: "High" },
       { text: "6. Turn ", bold: "OFF", suffix: " visit detection" },

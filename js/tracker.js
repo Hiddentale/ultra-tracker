@@ -183,6 +183,25 @@ document.getElementById("reset-btn").addEventListener("click", async () => {
   }
 });
 
+document.getElementById("delete-btn").addEventListener("click", async () => {
+  const pw = document.getElementById("admin-pw").value.trim();
+  if (!pw) return;
+  if (!confirm("Permanently delete this race? This cannot be undone.")) return;
+
+  const btn = document.getElementById("delete-btn");
+  btn.disabled = true;
+  btn.textContent = "Deleting...";
+
+  try {
+    await API.deleteRace(raceId, pw);
+    window.location.href = "index.html";
+  } catch (err) {
+    alert("Delete failed: " + err.message);
+    btn.disabled = false;
+    btn.textContent = "Delete Race";
+  }
+});
+
 window.addEventListener("resize", () => {
   if (routeData) {
     const canvas = document.getElementById("elevation-canvas");
