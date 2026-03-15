@@ -8,7 +8,7 @@ function corsHeaders(request) {
   const allowed = origin === CORS_ORIGIN
     || origin.startsWith("http://localhost:")
     || origin.startsWith("http://127.0.0.1:")
-    || origin === "null";
+;
   return {
     "Access-Control-Allow-Origin": allowed ? origin : CORS_ORIGIN,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -146,7 +146,7 @@ async function handleCreateRace(request, env) {
     return error(`GPX parsing failed: ${e.message}`, 400, request);
   }
 
-  const id = generateId(8);
+  const id = generateId(16);
   const token = generateToken();
   const totalDistKm = route[route.length - 1].cumDist / 1000;
   const snappedStations = snapAidStations(aid_stations || [], route);

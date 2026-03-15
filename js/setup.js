@@ -1,4 +1,5 @@
-const adminSecret = sessionStorage.getItem("admin_secret");
+const adminSecret = decodeURIComponent(window.location.hash.slice(1));
+history.replaceState(null, "", window.location.pathname);
 if (!adminSecret) {
   window.location.href = "admin.html";
 }
@@ -158,12 +159,23 @@ function removeStation(idx) {
 
 function renderStationList() {
   const list = document.getElementById("station-list");
-  list.innerHTML = aidStations.map((s, i) =>
-    `<div class="station-item">
-      <span>${s.name} — ${s.distance_km} km</span>
-      <button class="btn btn-small btn-danger" data-remove="${i}">Remove</button>
-    </div>`
-  ).join("");
+  list.replaceChildren();
+  aidStations.forEach((s, i) => {
+    const row = document.createElement("div");
+    row.className = "station-item";
+
+    const label = document.createElement("span");
+    label.textContent = `${s.name} — ${s.distance_km} km`;
+    row.appendChild(label);
+
+    const btn = document.createElement("button");
+    btn.className = "btn btn-small btn-danger";
+    btn.textContent = "Remove";
+    btn.dataset.remove = i;
+    row.appendChild(btn);
+
+    list.appendChild(row);
+  });
 }
 
 document.getElementById("station-list").addEventListener("click", (e) => {
@@ -218,10 +230,42 @@ document.getElementById("create-btn").addEventListener("click", async () => {
     tokenLabel.appendChild(document.createTextNode(" (save this — shown only once):"));
     resultEl.appendChild(tokenLabel);
 
+    const tokenRow = document.createElement("div");
+    tokenRow.className = "token-row";
+
     const tokenDiv = document.createElement("div");
     tokenDiv.className = "token-display";
     tokenDiv.textContent = result.token;
-    resultEl.appendChild(tokenDiv);
+    tokenRow.appendChild(tokenDiv);
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "btn btn-small";
+    copyBtn.textContent = "Copy";
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(result.token);
+      copyBtn.textContent = "Copied";
+      setTimeout(() => { copyBtn.textContent = "Copy"; }, 2000);
+    });
+    tokenRow.appendChild(copyBtn);
+    resultEl.appendChild(tokenRow);
+
+    const TOKEN_VISIBLE_SECONDS = 120;
+    const countdown = document.createElement("p");
+    countdown.className = "hint";
+    resultEl.appendChild(countdown);
+
+    let remaining = TOKEN_VISIBLE_SECONDS;
+    function tick() {
+      countdown.textContent = `Token clears in ${remaining}s — copy it now`;
+      remaining--;
+      if (remaining < 0) {
+        tokenDiv.textContent = "[cleared]";
+        countdown.textContent = "Token cleared from page";
+        return;
+      }
+      setTimeout(tick, 1000);
+    }
+    tick();
 
     const instrDiv = document.createElement("div");
     instrDiv.className = "instructions";
@@ -267,7 +311,6 @@ document.getElementById("create-btn").addEventListener("click", async () => {
     }
 
     resultEl.classList.add("visible");
-    sessionStorage.removeItem("admin_secret");
   } catch (err) {
     alert("Failed to create race: " + err.message);
     btn.disabled = false;
