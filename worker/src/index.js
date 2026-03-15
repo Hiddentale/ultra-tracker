@@ -11,7 +11,7 @@ function corsHeaders(request) {
 ;
   return {
     "Access-Control-Allow-Origin": allowed ? origin : CORS_ORIGIN,
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Max-Age": "86400",
   };
@@ -25,6 +25,11 @@ function json(data, status = 200, request = null) {
 
 function error(message, status, request) {
   return json({ error: message }, status, request);
+}
+
+function isValidAdmin(token, env) {
+  const secrets = env.ADMIN_SECRET.trim().split(",");
+  return secrets.some(s => s.trim() === token.trim());
 }
 
 function generateId(length) {
@@ -123,7 +128,7 @@ function snapAidStations(aidStations, route) {
 async function handleCreateRace(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const match = authHeader.match(/^Bearer\s+(.+)$/);
-  if (!match || match[1] !== env.ADMIN_SECRET) {
+  if (!match || !isValidAdmin(match[1], env)) {
     return error("Unauthorized", 401, request);
   }
 
@@ -255,7 +260,7 @@ async function handleLocationUpdate(request, env, raceId) {
 async function handleResetTrack(request, env, raceId) {
   const authHeader = request.headers.get("Authorization") || "";
   const match = authHeader.match(/^Bearer\s+(.+)$/);
-  if (!match || match[1] !== env.ADMIN_SECRET) {
+  if (!match || !isValidAdmin(match[1], env)) {
     return error("Unauthorized", 401, request);
   }
 
@@ -264,6 +269,24 @@ async function handleResetTrack(request, env, raceId) {
 
   const emptyLive = { current_location: null, track: "" };
   await env.RACE_DATA.put(`race:${raceId}:live`, JSON.stringify(emptyLive), { expirationTtl: KV_TTL });
+
+  return json({ result: "ok" }, 200, request);
+}
+
+async function handleDeleteRace(request, env, raceId) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const match = authHeader.match(/^Bearer\s+(.+)$/);
+  if (!match || !isValidAdmin(match[1], env)) {
+    return error("Unauthorized", 401, request);
+  }
+
+  const metaRaw = await env.RACE_DATA.get(`race:${raceId}:meta`);
+  if (!metaRaw) return error("Race not found", 404, request);
+
+  await Promise.all([
+    env.RACE_DATA.delete(`race:${raceId}:meta`),
+    env.RACE_DATA.delete(`race:${raceId}:live`),
+  ]);
 
   return json({ result: "ok" }, 200, request);
 }
@@ -297,6 +320,15 @@ async function handleListRaces(request, env) {
 
   races.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
   return json({ races }, 200, request);
+}
+
+async function handleVerifyAuth(request, env) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const match = authHeader.match(/^Bearer\s+(.+)$/);
+  if (!match || !isValidAdmin(match[1], env)) {
+    return error("Unauthorized", 401, request);
+  }
+  return json({ result: "ok" }, 200, request);
 }
 
 async function handleGetRoute(request, env, raceId) {
@@ -344,6 +376,10 @@ function matchRoute(method, path) {
     return { handler: "listRaces" };
   }
 
+  if (method === "POST" && path === "/api/auth/verify") {
+    return { handler: "verifyAuth" };
+  }
+
   if (method === "POST" && path === "/api/race") {
     return { handler: "createRace" };
   }
@@ -356,6 +392,11 @@ function matchRoute(method, path) {
   const resetMatch = path.match(/^\/api\/race\/([a-z0-9]+)\/reset$/);
   if (method === "POST" && resetMatch) {
     return { handler: "reset", raceId: resetMatch[1] };
+  }
+
+  const deleteMatch = path.match(/^\/api\/race\/([a-z0-9]+)$/);
+  if (method === "DELETE" && deleteMatch) {
+    return { handler: "deleteRace", raceId: deleteMatch[1] };
   }
 
   const routeMatch = path.match(/^\/api\/race\/([a-z0-9]+)\/route$/);
@@ -389,12 +430,16 @@ export default {
     switch (matched.handler) {
       case "listRaces":
         return handleListRaces(request, env);
+      case "verifyAuth":
+        return handleVerifyAuth(request, env);
       case "createRace":
         return handleCreateRace(request, env);
       case "location":
         return handleLocationUpdate(request, env, matched.raceId);
       case "reset":
         return handleResetTrack(request, env, matched.raceId);
+      case "deleteRace":
+        return handleDeleteRace(request, env, matched.raceId);
       case "route":
         return handleGetRoute(request, env, matched.raceId);
       case "live":
