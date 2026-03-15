@@ -5,3 +5,4 @@ node_modules/
 .wrangler/
 ULTRA-TRACKER-SPEC.md
 CLAUDE.md
+.claude
