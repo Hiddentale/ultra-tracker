@@ -7,7 +7,8 @@
       "Bash(ls -la o:/Programming/ultra-tracker/css/ o:/Programming/ultra-tracker/js/ o:/Programming/ultra-tracker/*.html)",
       "WebFetch(domain:developers.cloudflare.com)",
       "Bash(openssl dgst:*)",
-      "Bash(openssl base64:*)"
+      "Bash(openssl base64:*)",
+      "Bash(npx wrangler:*)"
     ],
     "additionalDirectories": [
       "o:\\Programming\\ultra-tracker"

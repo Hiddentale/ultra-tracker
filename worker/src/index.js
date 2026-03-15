@@ -167,7 +167,10 @@ async function handleCreateRace(request, env) {
   };
 
   await Promise.all([
-    env.RACE_DATA.put(`race:${id}:meta`, JSON.stringify(meta), { expirationTtl: KV_TTL }),
+    env.RACE_DATA.put(`race:${id}:meta`, JSON.stringify(meta), {
+      expirationTtl: KV_TTL,
+      metadata: { name, created_at: meta.created_at, total_distance_km: meta.total_distance_km },
+    }),
     env.RACE_DATA.put(`race:${id}:live`, JSON.stringify(emptyLive), { expirationTtl: KV_TTL }),
   ]);
 
@@ -215,6 +218,7 @@ async function handleLocationUpdate(request, env, raceId) {
     const coords = loc.geometry?.coordinates;
     const props = loc.properties || {};
     if (!coords) continue;
+    if (coords[0] === 0 && coords[1] === 0) continue;
 
     const point = {
       lat: coords[1],
@@ -245,7 +249,54 @@ async function handleLocationUpdate(request, env, raceId) {
 
   await env.RACE_DATA.put(`race:${raceId}:live`, JSON.stringify(live), { expirationTtl: KV_TTL });
 
-  return json({ ok: true }, 200, request);
+  return json({ result: "ok" }, 200, request);
+}
+
+async function handleResetTrack(request, env, raceId) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const match = authHeader.match(/^Bearer\s+(.+)$/);
+  if (!match || match[1] !== env.ADMIN_SECRET) {
+    return error("Unauthorized", 401, request);
+  }
+
+  const metaRaw = await env.RACE_DATA.get(`race:${raceId}:meta`);
+  if (!metaRaw) return error("Race not found", 404, request);
+
+  const emptyLive = { current_location: null, track: "" };
+  await env.RACE_DATA.put(`race:${raceId}:live`, JSON.stringify(emptyLive), { expirationTtl: KV_TTL });
+
+  return json({ result: "ok" }, 200, request);
+}
+
+async function handleListRaces(request, env) {
+  const list = await env.RACE_DATA.list({ prefix: "race:" });
+  const metaKeys = list.keys.filter(k => k.name.endsWith(":meta"));
+
+  const races = [];
+  for (const key of metaKeys) {
+    const id = key.name.split(":")[1];
+    if (key.metadata?.name) {
+      races.push({
+        id,
+        name: key.metadata.name,
+        created_at: key.metadata.created_at,
+        total_distance_km: key.metadata.total_distance_km,
+      });
+    } else {
+      const raw = await env.RACE_DATA.get(key.name);
+      if (!raw) continue;
+      const meta = JSON.parse(raw);
+      races.push({
+        id,
+        name: meta.name,
+        created_at: meta.created_at,
+        total_distance_km: meta.total_distance_km,
+      });
+    }
+  }
+
+  races.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+  return json({ races }, 200, request);
 }
 
 async function handleGetRoute(request, env, raceId) {
@@ -289,6 +340,10 @@ async function handleGetLive(request, env, raceId) {
 // --- Router ---
 
 function matchRoute(method, path) {
+  if (method === "GET" && path === "/api/races") {
+    return { handler: "listRaces" };
+  }
+
   if (method === "POST" && path === "/api/race") {
     return { handler: "createRace" };
   }
@@ -296,6 +351,11 @@ function matchRoute(method, path) {
   const locationMatch = path.match(/^\/api\/race\/([a-z0-9]+)\/location$/);
   if (method === "POST" && locationMatch) {
     return { handler: "location", raceId: locationMatch[1] };
+  }
+
+  const resetMatch = path.match(/^\/api\/race\/([a-z0-9]+)\/reset$/);
+  if (method === "POST" && resetMatch) {
+    return { handler: "reset", raceId: resetMatch[1] };
   }
 
   const routeMatch = path.match(/^\/api\/race\/([a-z0-9]+)\/route$/);
@@ -327,10 +387,14 @@ export default {
     }
 
     switch (matched.handler) {
+      case "listRaces":
+        return handleListRaces(request, env);
       case "createRace":
         return handleCreateRace(request, env);
       case "location":
         return handleLocationUpdate(request, env, matched.raceId);
+      case "reset":
+        return handleResetTrack(request, env, matched.raceId);
       case "route":
         return handleGetRoute(request, env, matched.raceId);
       case "live":

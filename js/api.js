@@ -2,6 +2,13 @@
 const WORKER_URL = "https://ultra-tracker.expeditionorion.workers.dev";
 
 const API = {
+  async listRaces() {
+    const res = await fetch(`${WORKER_URL}/api/races`);
+    if (!res.ok) throw new Error(`Failed to list races: ${res.status}`);
+    const data = await res.json();
+    return data.races;
+  },
+
   async getRoute(raceId) {
     const res = await fetch(`${WORKER_URL}/api/race/${raceId}/route`);
     if (!res.ok) throw new Error(`Failed to fetch route: ${res.status}`);
@@ -11,6 +18,18 @@ const API = {
   async getLive(raceId) {
     const res = await fetch(`${WORKER_URL}/api/race/${raceId}/live`);
     if (!res.ok) throw new Error(`Failed to fetch live data: ${res.status}`);
+    return res.json();
+  },
+
+  async resetTrack(raceId, adminSecret) {
+    const res = await fetch(`${WORKER_URL}/api/race/${raceId}/reset`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${adminSecret}` },
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Failed to reset: ${res.status}`);
+    }
     return res.json();
   },
 

@@ -62,7 +62,19 @@ function drawTrack(track) {
   }).addTo(map);
 }
 
+function clearTrack() {
+  if (trackLayer) {
+    map.removeLayer(trackLayer);
+    trackLayer = null;
+  }
+  if (runnerMarker) {
+    map.removeLayer(runnerMarker);
+    runnerMarker = null;
+  }
+}
+
 function updateRunnerPosition(lat, lon, offRoute) {
+  if (lat == null || lon == null) return;
   const color = offRoute ? "#f0c040" : "#e8622c";
 
   if (!runnerMarker) {

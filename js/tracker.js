@@ -155,6 +155,34 @@ async function init() {
   }
 }
 
+document.getElementById("admin-toggle").addEventListener("click", () => {
+  document.getElementById("admin-panel").classList.toggle("visible");
+});
+
+document.getElementById("reset-btn").addEventListener("click", async () => {
+  const pw = document.getElementById("admin-pw").value.trim();
+  if (!pw) return;
+
+  const btn = document.getElementById("reset-btn");
+  btn.disabled = true;
+  btn.textContent = "Resetting...";
+
+  try {
+    await API.resetTrack(raceId, pw);
+    previousSnapIndex = null;
+    clearTrack();
+    updateRunnerPosition(null, null, false);
+    document.getElementById("admin-panel").classList.remove("visible");
+    document.getElementById("admin-pw").value = "";
+    await pollLive();
+  } catch (err) {
+    alert("Reset failed: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Reset Track";
+  }
+});
+
 window.addEventListener("resize", () => {
   if (routeData) {
     const canvas = document.getElementById("elevation-canvas");

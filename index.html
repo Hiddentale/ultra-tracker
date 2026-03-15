@@ -14,19 +14,21 @@
   <div class="card">
     <h1>ULTRA TRACKER</h1>
     <div class="divider"><span class="divider-dot"></span></div>
-    <p class="subtitle">Enter a race ID to view live tracking</p>
 
-    <form id="race-form">
-      <input type="text" id="race-id" placeholder="Race ID" autocomplete="off" autofocus>
-      <button type="submit" class="btn btn-full">Track Race</button>
-      <p class="error" id="error">Please enter a race ID</p>
-    </form>
+    <div id="race-list" class="race-list">
+      <p class="loading-text">Loading races...</p>
+    </div>
+
+    <div id="empty-state" class="empty-state reveal">
+      <p>No active races</p>
+    </div>
 
     <div class="admin-link">
       <a href="admin.html">Race organiser? Set up a new race</a>
     </div>
   </div>
 
+  <script src="js/api.js"></script>
   <script src="js/landing.js"></script>
 </body>
 </html>

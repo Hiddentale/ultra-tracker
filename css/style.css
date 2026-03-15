@@ -198,6 +198,32 @@
   animation: fadeIn 0.3s ease-out;
 }
 
+/* --- Admin Controls --- */
+
+.admin-controls {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.admin-panel {
+  margin-top: 8px;
+  display: none;
+}
+
+.admin-panel.visible {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.admin-panel input {
+  flex: 1;
+  font-size: 0.85rem;
+  padding: 6px 10px;
+}
+
 /* --- Leaflet Overrides --- */
 
 .aid-station-icon {
