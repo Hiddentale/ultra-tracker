@@ -1,63 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Race Setup — Ultra Tracker</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <title>Admin — Ultra Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/admin.css">
 </head>
-
 <body>
-  <h1>Race Setup</h1>
+  <div class="card">
+    <h1>RACE ADMIN</h1>
+    <p class="subtitle">Authenticate to create or manage races</p>
 
-  <div class="form-section">
-    <label for="admin-secret">Admin Password</label>
-    <input type="text" id="admin-secret" placeholder="Enter admin password" autocomplete="off">
-  </div>
+    <form id="auth-form">
+      <input type="password" id="admin-secret" placeholder="Admin password" autocomplete="off" autofocus>
+      <button type="submit" class="btn btn-full">Enter</button>
+    </form>
 
-  <div class="form-section">
-    <label for="race-name">Race Name</label>
-    <input type="text" id="race-name" placeholder="e.g. Trail des Géants 2026">
-  </div>
-
-  <div class="form-section">
-    <label for="gpx-file">GPX Route File</label>
-    <input type="file" id="gpx-file" accept=".gpx">
-    <div id="gpx-info" class="hint"></div>
-  </div>
-
-  <div id="map-preview"></div>
-
-  <div class="form-section aid-section" id="aid-section">
-    <h2>Aid Stations</h2>
-    <p class="hint">Click on the map to add an aid station. Drag markers to reposition. Or add manually below.</p>
-
-    <div class="station-input-row">
-      <input type="text" id="station-name" placeholder="Station name" class="station-name-input">
-      <input type="text" id="station-dist" placeholder="Distance (km)" class="station-dist-input">
-      <button type="button" id="add-station-btn">Add</button>
+    <div class="back-link">
+      <a href="index.html">Back to tracker</a>
     </div>
-
-    <div id="station-list" class="station-list"></div>
   </div>
 
-  <button id="create-btn" disabled>Create Race</button>
-
-  <div id="result">
-    <h2>Race Created!</h2>
-    <p><strong>Race ID:</strong> <span id="result-id"></span></p>
-    <p><strong>Viewer URL:</strong> <a id="result-url" href="#" target="_blank"></a></p>
-    <p><strong>Auth Token</strong> (save this — shown only once):</p>
-    <div class="token-display" id="result-token"></div>
-
-    <div class="instructions" id="overland-instructions"></div>
-  </div>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="js/api.js"></script>
   <script src="js/admin.js"></script>
 </body>
-
 </html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Race Setup — Ultra Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/setup.css">
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <h1>RACE SETUP</h1>
+      <p>Configure your race route and aid stations</p>
+    </div>
+
+    <div class="form-section">
+      <label for="race-name">Race Name</label>
+      <input type="text" id="race-name" placeholder="e.g. Trail des Géants 2026">
+    </div>
+
+    <div class="form-section">
+      <label for="gpx-file">GPX Route File</label>
+      <div class="file-upload">
+        <input type="file" id="gpx-file" accept=".gpx">
+        <label for="gpx-file" class="file-label" id="file-label">Choose GPX file</label>
+      </div>
+      <div id="gpx-info" class="hint"></div>
+    </div>
+
+    <div id="map-preview" class="reveal"></div>
+
+    <div class="form-section reveal" id="aid-section">
+      <h2>AID STATIONS</h2>
+      <p class="hint">Click on the map to add an aid station. Drag markers to reposition.</p>
+
+      <div class="station-input-row">
+        <input type="text" id="station-name" placeholder="Station name" class="station-name-input">
+        <input type="text" id="station-dist" placeholder="Distance (km)" class="station-dist-input">
+        <button type="button" id="add-station-btn" class="btn btn-small">Add</button>
+      </div>
+
+      <div id="station-list" class="station-list"></div>
+    </div>
+
+    <button id="create-btn" class="btn btn-full" disabled>Create Race</button>
+
+    <div id="result" class="result reveal"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/setup.js"></script>
+</body>
+</html>

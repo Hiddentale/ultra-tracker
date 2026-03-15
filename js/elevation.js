@@ -46,7 +46,7 @@ function drawElevationProfile(canvas, route, currentDistAlongRoute) {
     ctx.lineTo(runnerX, h - padding.bottom);
     ctx.lineTo(padding.left, h - padding.bottom);
     ctx.closePath();
-    ctx.fillStyle = "rgba(34, 197, 94, 0.2)";
+    ctx.fillStyle = "rgba(61, 220, 132, 0.15)";
     ctx.fill();
   }
 
@@ -67,7 +67,7 @@ function drawElevationProfile(canvas, route, currentDistAlongRoute) {
   ctx.lineTo(toX(totalDist), h - padding.bottom);
   ctx.lineTo(runnerX, h - padding.bottom);
   ctx.closePath();
-  ctx.fillStyle = "rgba(148, 163, 184, 0.15)";
+  ctx.fillStyle = "rgba(148, 163, 184, 0.08)";
   ctx.fill();
 
   // Draw elevation line
@@ -76,7 +76,7 @@ function drawElevationProfile(canvas, route, currentDistAlongRoute) {
   for (let i = 1; i < route.length; i++) {
     ctx.lineTo(toX(route[i].cumDist), toY(route[i].ele || minEle));
   }
-  ctx.strokeStyle = "#94a3b8";
+  ctx.strokeStyle = "#3a3d44";
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
@@ -88,7 +88,7 @@ function drawElevationProfile(canvas, route, currentDistAlongRoute) {
       if (p.cumDist > currentDistAlongRoute) break;
       ctx.lineTo(toX(p.cumDist), toY(p.ele || minEle));
     }
-    ctx.strokeStyle = "#22c55e";
+    ctx.strokeStyle = "#3ddc84";
     ctx.lineWidth = 2;
     ctx.stroke();
   }
@@ -111,23 +111,23 @@ function drawElevationProfile(canvas, route, currentDistAlongRoute) {
     ctx.beginPath();
     ctx.moveTo(runnerX, padding.top);
     ctx.lineTo(runnerX, h - padding.bottom);
-    ctx.strokeStyle = "rgba(239, 68, 68, 0.4)";
+    ctx.strokeStyle = "rgba(232, 98, 44, 0.4)";
     ctx.lineWidth = 1;
     ctx.stroke();
 
     // Dot
     ctx.beginPath();
     ctx.arc(runnerX, toY(runnerEle), 4, 0, Math.PI * 2);
-    ctx.fillStyle = "#ef4444";
+    ctx.fillStyle = "#e8622c";
     ctx.fill();
-    ctx.strokeStyle = "white";
+    ctx.strokeStyle = "#1a1d22";
     ctx.lineWidth = 1.5;
     ctx.stroke();
   }
 
   // Axis labels
-  ctx.fillStyle = "#6b7280";
-  ctx.font = "10px sans-serif";
+  ctx.fillStyle = "#5c5952";
+  ctx.font = "10px 'DM Sans', sans-serif";
   ctx.textAlign = "left";
   ctx.fillText(`${Math.round(minEle)}m`, padding.left + 2, h - 2);
   ctx.textAlign = "right";

@@ -3,7 +3,8 @@
     "allow": [
       "Bash(ls o:/Programming/ultra-tracker/*.html)",
       "Read(//o/Programming/personal-website/**)",
-      "Bash(ls o:/Programming/ultra-tracker/*.html o:/Programming/ultra-tracker/css/ o:/Programming/ultra-tracker/js/)"
+      "Bash(ls o:/Programming/ultra-tracker/*.html o:/Programming/ultra-tracker/css/ o:/Programming/ultra-tracker/js/)",
+      "Bash(ls -la o:/Programming/ultra-tracker/css/ o:/Programming/ultra-tracker/js/ o:/Programming/ultra-tracker/*.html)"
     ],
     "additionalDirectories": [
       "o:\\Programming\\ultra-tracker"

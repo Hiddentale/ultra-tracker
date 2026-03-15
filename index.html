@@ -4,16 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ultra Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/landing.css">
 </head>
 <body>
   <div class="card">
-    <h1>Ultra Tracker</h1>
+    <h1>ULTRA TRACKER</h1>
+    <div class="divider"><span class="divider-dot"></span></div>
     <p class="subtitle">Enter a race ID to view live tracking</p>
 
     <form id="race-form">
       <input type="text" id="race-id" placeholder="Race ID" autocomplete="off" autofocus>
-      <button type="submit">Track Race</button>
+      <button type="submit" class="btn btn-full">Track Race</button>
       <p class="error" id="error">Please enter a race ID</p>
     </form>
 

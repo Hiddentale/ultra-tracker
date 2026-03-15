@@ -23,9 +23,9 @@ function drawRoute(route) {
 
   const latlngs = route.map(p => [p.lat, p.lon]);
   routeLayer = L.polyline(latlngs, {
-    color: "#94a3b8",
+    color: "#4a4d55",
     weight: 4,
-    opacity: 0.6,
+    opacity: 0.8,
   }).addTo(map);
 
   map.fitBounds(routeLayer.getBounds(), { padding: [20, 20] });
@@ -56,14 +56,14 @@ function drawTrack(track) {
 
   const latlngs = track.map(p => [p.lat, p.lon]);
   trackLayer = L.polyline(latlngs, {
-    color: "#3b82f6",
+    color: "#3ddc84",
     weight: 3,
-    opacity: 0.8,
+    opacity: 0.85,
   }).addTo(map);
 }
 
 function updateRunnerPosition(lat, lon, offRoute) {
-  const color = offRoute ? "#eab308" : "#ef4444";
+  const color = offRoute ? "#f0c040" : "#e8622c";
 
   if (!runnerMarker) {
     const icon = L.divIcon({
