@@ -75,6 +75,47 @@ function renderAidStations(stations) {
   }).join("");
 }
 
+function formatHMS(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function updatePrediction(track, distAlongRoute, totalDist, pace) {
+  const elapsedEl = document.getElementById("elapsed-value");
+  const remainingEl = document.getElementById("remaining-value");
+  const finishEl = document.getElementById("finish-value");
+
+  if (!track.length) return;
+
+  const startTime = new Date(track[0].timestamp).getTime();
+  const now = Date.now();
+  const elapsed = now - startTime;
+
+  elapsedEl.textContent = formatHMS(elapsed);
+
+  if (!pace) {
+    remainingEl.textContent = "--";
+    finishEl.textContent = "--";
+    return;
+  }
+
+  const remainingDist = totalDist - distAlongRoute;
+  if (remainingDist <= 0) {
+    remainingEl.textContent = "0m";
+    finishEl.textContent = "Done!";
+    return;
+  }
+
+  const remainingMs = remainingDist * pace;
+  remainingEl.textContent = formatHMS(remainingMs);
+
+  const finishTime = new Date(now + remainingMs);
+  finishEl.textContent = finishTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
 function updateStats(distAlongRoute, totalDist, pace, altitude) {
   document.getElementById("pace-value").textContent = formatPace(pace);
   const km = Math.round(distAlongRoute / 100) / 10;
@@ -116,6 +157,7 @@ async function pollLive() {
 
     const totalDist = routeData.route[routeData.route.length - 1].cumDist;
     updateStats(snap.distAlongRoute, totalDist, pace, loc.altitude);
+    updatePrediction(live.track, snap.distAlongRoute, totalDist, pace);
 
     const canvas = document.getElementById("elevation-canvas");
     drawElevationProfile(canvas, routeData.route, snap.distAlongRoute);
