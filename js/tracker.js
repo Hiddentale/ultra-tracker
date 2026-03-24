@@ -88,7 +88,12 @@ function updatePrediction(track, distAlongRoute, totalDist, pace) {
   const remainingEl = document.getElementById("remaining-value");
   const finishEl = document.getElementById("finish-value");
 
-  if (!track.length) return;
+  if (!track.length) {
+    elapsedEl.textContent = "--";
+    remainingEl.textContent = "--";
+    finishEl.textContent = "--";
+    return;
+  }
 
   const startTime = new Date(track[0].timestamp).getTime();
   const now = Date.now();
@@ -212,6 +217,7 @@ document.getElementById("reset-btn").addEventListener("click", async () => {
   try {
     await API.resetTrack(raceId, pw);
     previousSnapIndex = null;
+    lastValidPace = null;
     clearTrack();
     updateRunnerPosition(null, null, false);
     document.getElementById("admin-panel").classList.remove("visible");
