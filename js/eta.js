@@ -1,22 +1,21 @@
 const PACE_WINDOW_MS = 20 * 60 * 1000; // 20 minutes
 const MIN_POINTS_FOR_ETA = 3;
-const STATIONARY_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
-const STATIONARY_DISTANCE = 50; // meters — consider stationary if moved less than this
+const MIN_DISTANCE_FOR_PACE = 20; // meters — need at least this much movement to update pace
+
+let lastValidPace = null;
 
 function computePace(track, route, currentDistAlongRoute) {
-  if (track.length < MIN_POINTS_FOR_ETA) return null;
+  if (track.length < MIN_POINTS_FOR_ETA) return lastValidPace;
 
   const now = new Date(track[track.length - 1].timestamp).getTime();
   const windowStart = now - PACE_WINDOW_MS;
 
-  // Filter track points within the rolling window
   const windowPoints = track.filter(p =>
     new Date(p.timestamp).getTime() >= windowStart
   );
 
-  if (windowPoints.length < MIN_POINTS_FOR_ETA) return null;
+  if (windowPoints.length < MIN_POINTS_FOR_ETA) return lastValidPace;
 
-  // Snap first and last window points to route to get distance covered
   const first = windowPoints[0];
   const last = windowPoints[windowPoints.length - 1];
   const firstSnap = snapToRoute(first.lat, first.lon, route, null);
@@ -25,36 +24,14 @@ function computePace(track, route, currentDistAlongRoute) {
   const distanceCovered = lastSnap.distAlongRoute - firstSnap.distAlongRoute;
   const timeCovered = new Date(last.timestamp).getTime() - new Date(first.timestamp).getTime();
 
-  if (distanceCovered <= 0 || timeCovered <= 0) return null;
-
-  // Check if stationary (at an aid station, resting, etc.)
-  const isStationary = distanceCovered < STATIONARY_DISTANCE
-    && timeCovered > STATIONARY_THRESHOLD_MS;
-
-  if (isStationary) {
-    // Find pace from before the stop — look at points before the window
-    const preStopPoints = track.filter(p =>
-      new Date(p.timestamp).getTime() < windowStart
-    );
-    if (preStopPoints.length >= MIN_POINTS_FOR_ETA) {
-      return computePaceFromPoints(preStopPoints.slice(-20), route);
-    }
-    return null;
+  if (distanceCovered < MIN_DISTANCE_FOR_PACE || timeCovered <= 0) {
+    return lastValidPace;
   }
 
   // pace = ms per meter
-  return timeCovered / distanceCovered;
-}
-
-function computePaceFromPoints(points, route) {
-  const first = points[0];
-  const last = points[points.length - 1];
-  const firstSnap = snapToRoute(first.lat, first.lon, route, null);
-  const lastSnap = snapToRoute(last.lat, last.lon, route, firstSnap.segmentIndex);
-  const dist = lastSnap.distAlongRoute - firstSnap.distAlongRoute;
-  const time = new Date(last.timestamp).getTime() - new Date(first.timestamp).getTime();
-  if (dist <= 0 || time <= 0) return null;
-  return time / dist;
+  const pace = timeCovered / distanceCovered;
+  lastValidPace = pace;
+  return pace;
 }
 
 function computeETAs(aidStations, currentDistAlongRoute, pace) {
