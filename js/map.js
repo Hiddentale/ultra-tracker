@@ -3,6 +3,7 @@ let routeLayer = null;
 let trackLayer = null;
 let runnerMarker = null;
 let aidMarkers = [];
+let runnerBearing = 0;
 
 function initMap() {
   map = L.map("map", {
@@ -73,28 +74,51 @@ function clearTrack() {
   }
 }
 
-function updateRunnerPosition(lat, lon, offRoute) {
+function computeBearing(route, segmentIndex) {
+  const a = route[segmentIndex];
+  const b = route[Math.min(segmentIndex + 1, route.length - 1)];
+  const toRad = x => x * Math.PI / 180;
+  const toDeg = x => x * 180 / Math.PI;
+  const dLon = toRad(b.lon - a.lon);
+  const y = Math.sin(dLon) * Math.cos(toRad(b.lat));
+  const x = Math.cos(toRad(a.lat)) * Math.sin(toRad(b.lat))
+    - Math.sin(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.cos(dLon);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+function makeArrowSvg(color) {
+  return `<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="10,2 18,18 10,13 2,18" fill="${color}" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+function updateRunnerPosition(lat, lon, offRoute, route, segmentIndex) {
   if (lat == null || lon == null) return;
   const color = offRoute ? "#f0c040" : "#e8622c";
 
+  if (route && segmentIndex != null) {
+    runnerBearing = computeBearing(route, segmentIndex);
+  }
+
+  const arrowHtml = `<div class="runner-arrow" style="transform: rotate(${runnerBearing}deg)">${makeArrowSvg(color)}</div>`;
+
   if (!runnerMarker) {
     const icon = L.divIcon({
-      className: "runner-icon",
-      iconSize: [16, 16],
-      iconAnchor: [8, 8],
-      html: "",
+      className: "runner-icon-wrapper",
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
+      html: arrowHtml,
     });
     runnerMarker = L.marker([lat, lon], { icon, zIndexOffset: 1000 }).addTo(map);
   } else {
     runnerMarker.setLatLng([lat, lon]);
-  }
-
-  // Update icon color
-  const el = runnerMarker.getElement();
-  if (el) {
-    el.style.background = color;
-    el.style.borderRadius = "50%";
-    el.style.border = "3px solid white";
-    el.style.boxShadow = "0 2px 6px rgba(0,0,0,0.4)";
+    const el = runnerMarker.getElement();
+    if (el) {
+      const arrow = el.querySelector(".runner-arrow");
+      if (arrow) {
+        arrow.style.transform = `rotate(${runnerBearing}deg)`;
+        arrow.innerHTML = makeArrowSvg(color);
+      }
+    }
   }
 }

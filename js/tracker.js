@@ -1,8 +1,11 @@
 const POLL_INTERVAL = 20000;
+const FINISH_THRESHOLD = 0.98;
 
 let raceId = null;
 let routeData = null;
 let previousSnapIndex = null;
+let raceFinished = false;
+let maxDistAlongRoute = 0;
 
 function getRaceId() {
   const params = new URLSearchParams(window.location.search);
@@ -54,25 +57,18 @@ function renderAidStations(stations) {
     return;
   }
 
-  list.innerHTML = upcoming.map((s, i) => {
-    const prefix = i === 0 ? "Next" : "Then";
-    const etaStr = s.eta
-      ? `ETA: ${s.eta.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-      : "Calculating...";
-    const durStr = s.eta_duration_min != null
-      ? formatDuration(s.eta_duration_min)
-      : "";
-    const distStr = s.remaining_km != null
-      ? `${s.remaining_km} km away`
-      : "";
+  const next = upcoming[0];
+  const distStr = next.remaining_km != null ? `${next.remaining_km} km away` : "";
+  const etaStr = next.eta
+    ? next.eta.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "--";
 
-    return `
-      <div class="aid-station">
-        <div class="aid-name">${prefix}: ${s.name}</div>
-        <div class="aid-details">${distStr}${durStr ? " · " + durStr : ""}</div>
-        <div class="aid-eta">${etaStr}</div>
-      </div>`;
-  }).join("");
+  list.innerHTML = `
+    <div class="aid-station">
+      <div class="aid-name">${next.name}</div>
+      <div class="aid-details">${distStr}</div>
+      <div class="aid-eta">${etaStr}</div>
+    </div>`;
 }
 
 function formatHMS(ms) {
@@ -142,30 +138,42 @@ async function pollLive() {
     const loc = live.current_location;
     updateStaleness(loc.timestamp);
 
+    const totalDist = routeData.route[routeData.route.length - 1].cumDist;
     const snap = snapToRoute(loc.lat, loc.lon, routeData.route, previousSnapIndex);
     previousSnapIndex = snap.segmentIndex;
 
+    // Track maximum distance to detect finish and prevent snap-back
+    if (snap.distAlongRoute > maxDistAlongRoute) {
+      maxDistAlongRoute = snap.distAlongRoute;
+    }
+
+    if (maxDistAlongRoute >= totalDist * FINISH_THRESHOLD) {
+      raceFinished = true;
+    }
+
+    // Use max distance if finished (prevents snap-back to start on loop routes)
+    const effectiveDist = raceFinished ? totalDist : snap.distAlongRoute;
+
     if (snap.offRoute) {
-      updateRunnerPosition(loc.lat, loc.lon, true);
+      updateRunnerPosition(loc.lat, loc.lon, true, routeData.route, snap.segmentIndex);
     } else {
-      updateRunnerPosition(snap.lat, snap.lon, false);
+      updateRunnerPosition(snap.lat, snap.lon, false, routeData.route, snap.segmentIndex);
     }
 
     const badge = document.getElementById("off-route-badge");
-    badge.classList.toggle("visible", snap.offRoute);
+    badge.classList.toggle("visible", snap.offRoute && !raceFinished);
 
     drawTrack(live.track);
 
-    const pace = computePace(live.track, routeData.route, snap.distAlongRoute);
-    const etas = computeETAs(routeData.aid_stations, snap.distAlongRoute, pace);
+    const pace = computePace(live.track, routeData.route, effectiveDist);
+    const etas = computeETAs(routeData.aid_stations, effectiveDist, pace);
     renderAidStations(etas);
 
-    const totalDist = routeData.route[routeData.route.length - 1].cumDist;
-    updateStats(snap.distAlongRoute, totalDist, pace, loc.altitude);
-    updatePrediction(live.track, snap.distAlongRoute, totalDist, pace);
+    updateStats(effectiveDist, totalDist, pace, loc.altitude);
+    updatePrediction(live.track, effectiveDist, totalDist, pace);
 
     const canvas = document.getElementById("elevation-canvas");
-    drawElevationProfile(canvas, routeData.route, snap.distAlongRoute);
+    drawElevationProfile(canvas, routeData.route, effectiveDist);
   } catch (err) {
     console.error("Poll failed:", err);
     showError("Failed to fetch live data. Retrying...");
@@ -218,6 +226,8 @@ document.getElementById("reset-btn").addEventListener("click", async () => {
     await API.resetTrack(raceId, pw);
     previousSnapIndex = null;
     lastValidPace = null;
+    raceFinished = false;
+    maxDistAlongRoute = 0;
     clearTrack();
     updateRunnerPosition(null, null, false);
     document.getElementById("admin-panel").classList.remove("visible");

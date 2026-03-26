@@ -258,11 +258,17 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-.runner-icon {
-  background: var(--red);
-  border: 3px solid white;
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+.runner-icon-wrapper {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.runner-arrow {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease-out;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 .leaflet-popup-content {
