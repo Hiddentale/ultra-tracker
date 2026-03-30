@@ -45,14 +45,14 @@ const API = {
     return res.json();
   },
 
-  async createRace(name, gpx, aidStations, adminSecret) {
+  async createRace(name, gpx, aidStations, adminSecret, startTime, endTime) {
     const res = await fetch(`${WORKER_URL}/api/race`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${adminSecret}`,
       },
-      body: JSON.stringify({ name, gpx, aid_stations: aidStations }),
+      body: JSON.stringify({ name, gpx, aid_stations: aidStations, start_time: startTime, end_time: endTime }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));

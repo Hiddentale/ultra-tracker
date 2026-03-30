@@ -44,6 +44,8 @@ function generateToken() {
 }
 
 const KV_TTL = 30 * 24 * 60 * 60; // 30 days in seconds
+const FINISH_RADIUS = 150; // meters — GPS point within this distance of last route point = finished
+const MIN_TRACK_POINTS_FOR_FINISH = 20; // avoid false trigger at start of loop courses
 
 // --- Haversine ---
 
@@ -139,7 +141,7 @@ async function handleCreateRace(request, env) {
     return error("Invalid JSON body", 400, request);
   }
 
-  const { name, gpx, aid_stations } = body;
+  const { name, gpx, aid_stations, start_time, end_time } = body;
   if (!name || !gpx) {
     return error("Missing required fields: name, gpx", 400, request);
   }
@@ -161,6 +163,8 @@ async function handleCreateRace(request, env) {
     name,
     token,
     created_at: new Date().toISOString(),
+    start_time: start_time ? new Date(start_time).toISOString() : null,
+    end_time: end_time ? new Date(end_time).toISOString() : null,
     route,
     aid_stations: snappedStations,
     total_distance_km: Math.round(totalDistKm * 100) / 100,
@@ -215,7 +219,14 @@ async function handleLocationUpdate(request, env, raceId) {
   const liveRaw = await env.RACE_DATA.get(`race:${raceId}:live`);
   const live = liveRaw ? JSON.parse(liveRaw) : { current_location: null, track: "" };
 
-  // Process all locations
+  // Race already finished — accept request but discard data
+  if (live.finished_at) {
+    return json({ result: "ok" }, 200, request);
+  }
+
+  // Process all locations, filtering by race time window
+  const raceStart = meta.start_time ? new Date(meta.start_time).getTime() : null;
+  const raceEnd = meta.end_time ? new Date(meta.end_time).getTime() : null;
   const newTrackLines = [];
   let latest = null;
 
@@ -225,12 +236,18 @@ async function handleLocationUpdate(request, env, raceId) {
     if (!coords) continue;
     if (coords[0] === 0 && coords[1] === 0) continue;
 
+    const ts = props.timestamp || new Date().toISOString();
+    const tsMs = new Date(ts).getTime();
+
+    if (raceStart && tsMs < raceStart) continue;
+    if (raceEnd && tsMs > raceEnd) continue;
+
     const point = {
       lat: coords[1],
       lon: coords[0],
       altitude: props.altitude ?? null,
       speed: props.speed ?? null,
-      timestamp: props.timestamp || new Date().toISOString(),
+      timestamp: ts,
       accuracy: props.horizontal_accuracy ?? null,
     };
 
@@ -252,6 +269,18 @@ async function handleLocationUpdate(request, env, raceId) {
       : newTrackLines.join("\n");
   }
 
+  // Detect finish: runner close to last route point after enough tracking
+  if (latest && !live.finished_at) {
+    const trackPointCount = live.track ? live.track.split("\n").length : 0;
+    if (trackPointCount >= MIN_TRACK_POINTS_FOR_FINISH) {
+      const finish = meta.route[meta.route.length - 1];
+      const distToFinish = haversine(latest.lat, latest.lon, finish.lat, finish.lon);
+      if (distToFinish < FINISH_RADIUS) {
+        live.finished_at = latest.timestamp;
+      }
+    }
+  }
+
   await env.RACE_DATA.put(`race:${raceId}:live`, JSON.stringify(live), { expirationTtl: KV_TTL });
 
   return json({ result: "ok" }, 200, request);
@@ -267,7 +296,7 @@ async function handleResetTrack(request, env, raceId) {
   const metaRaw = await env.RACE_DATA.get(`race:${raceId}:meta`);
   if (!metaRaw) return error("Race not found", 404, request);
 
-  const emptyLive = { current_location: null, track: "" };
+  const emptyLive = { current_location: null, track: "", finished_at: null };
   await env.RACE_DATA.put(`race:${raceId}:live`, JSON.stringify(emptyLive), { expirationTtl: KV_TTL });
 
   return json({ result: "ok" }, 200, request);
@@ -339,6 +368,8 @@ async function handleGetRoute(request, env, raceId) {
   const response = {
     name: meta.name,
     total_distance_km: meta.total_distance_km,
+    start_time: meta.start_time || null,
+    end_time: meta.end_time || null,
     aid_stations: meta.aid_stations,
     route: meta.route,
   };

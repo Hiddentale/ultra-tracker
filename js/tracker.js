@@ -7,6 +7,22 @@ let previousSnapIndex = null;
 let raceFinished = false;
 let maxDistAlongRoute = 0;
 
+function appendFinishStation(data) {
+  const lastPoint = data.route[data.route.length - 1];
+  const finishKm = Math.round(data.total_distance_km * 100) / 100;
+  const alreadyHasFinish = data.aid_stations.some(
+    s => s.distance_km >= finishKm * 0.98
+  );
+  if (alreadyHasFinish) return;
+
+  data.aid_stations.push({
+    name: "Finish",
+    lat: lastPoint.lat,
+    lon: lastPoint.lon,
+    distance_km: finishKm,
+  });
+}
+
 function getRaceId() {
   const params = new URLSearchParams(window.location.search);
   return params.get("id");
@@ -191,6 +207,8 @@ async function init() {
   try {
     initMap();
     routeData = await API.getRoute(raceId);
+
+    appendFinishStation(routeData);
 
     document.title = routeData.name + " — Tracker";
     drawRoute(routeData.route);

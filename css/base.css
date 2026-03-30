@@ -64,7 +64,8 @@ html, body {
 /* --- Inputs --- */
 
 input[type="text"],
-input[type="password"] {
+input[type="password"],
+input[type="datetime-local"] {
   width: 100%;
   padding: 10px 14px;
   background: var(--bg-input);
@@ -74,6 +75,11 @@ input[type="password"] {
   font-family: var(--font-body);
   font-size: 0.95rem;
   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
 }
 
 input:focus {
