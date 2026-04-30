@@ -38,30 +38,42 @@ function hideLoading() {
   document.getElementById("loading-overlay").classList.add("hidden");
 }
 
-function updateStaleness(timestamp) {
+function updateStaleness(locationTimestamp, pingTimestamp) {
   const dot = document.getElementById("staleness-dot");
   const text = document.getElementById("staleness-text");
 
-  if (!timestamp) {
-    text.textContent = "No data yet";
-    dot.className = "staleness-dot old";
+  if (locationTimestamp) {
+    const ageMs = Date.now() - new Date(locationTimestamp).getTime();
+    const ageSec = Math.floor(ageMs / 1000);
+    const ageMin = Math.floor(ageSec / 60);
+
+    if (ageSec < 120) {
+      text.textContent = `${ageSec}s ago`;
+      dot.className = "staleness-dot fresh";
+    } else if (ageMin < 5) {
+      text.textContent = `${ageMin} min ago`;
+      dot.className = "staleness-dot stale";
+    } else {
+      text.textContent = `${ageMin} min ago`;
+      dot.className = "staleness-dot old";
+    }
     return;
   }
 
-  const ageMs = Date.now() - new Date(timestamp).getTime();
-  const ageSec = Math.floor(ageMs / 1000);
-  const ageMin = Math.floor(ageSec / 60);
-
-  if (ageSec < 120) {
-    text.textContent = `${ageSec}s ago`;
-    dot.className = "staleness-dot fresh";
-  } else if (ageMin < 5) {
-    text.textContent = `${ageMin} min ago`;
-    dot.className = "staleness-dot stale";
-  } else {
-    text.textContent = `${ageMin} min ago`;
-    dot.className = "staleness-dot old";
+  if (pingTimestamp) {
+    const ageMin = Math.floor((Date.now() - new Date(pingTimestamp).getTime()) / 60000);
+    if (ageMin < 5) {
+      text.textContent = "GPS connected";
+      dot.className = "staleness-dot connected";
+    } else {
+      text.textContent = `Last ping ${ageMin}m ago`;
+      dot.className = "staleness-dot stale";
+    }
+    return;
   }
+
+  text.textContent = "No data yet";
+  dot.className = "staleness-dot old";
 }
 
 function renderAidStations(stations) {
@@ -147,12 +159,12 @@ async function pollLive() {
     const live = await API.getLive(raceId);
 
     if (!live.current_location) {
-      updateStaleness(null);
+      updateStaleness(null, live.last_ping_at || null);
       return;
     }
 
     const loc = live.current_location;
-    updateStaleness(loc.timestamp);
+    updateStaleness(loc.timestamp, null);
 
     const totalDist = routeData.route[routeData.route.length - 1].cumDist;
     const snap = snapToRoute(loc.lat, loc.lon, routeData.route, previousSnapIndex);

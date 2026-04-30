@@ -164,6 +164,12 @@
 .staleness-dot.fresh { background: var(--green); }
 .staleness-dot.stale { background: var(--yellow); }
 .staleness-dot.old { background: var(--red); }
+.staleness-dot.connected { background: var(--green); animation: ping 1.5s ease-in-out infinite; }
+
+@keyframes ping {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
 
 /* --- Off Route Badge --- */
 

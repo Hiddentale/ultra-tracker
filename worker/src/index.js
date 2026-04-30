@@ -224,6 +224,9 @@ async function handleLocationUpdate(request, env, raceId) {
     return json({ result: "ok" }, 200, request);
   }
 
+  // Record that Overland is connected, even if points are filtered by time window
+  live.last_ping_at = new Date().toISOString();
+
   // Process all locations, filtering by race time window
   const raceStart = meta.start_time ? new Date(meta.start_time).getTime() : null;
   const raceEnd = meta.end_time ? new Date(meta.end_time).getTime() : null;
@@ -397,6 +400,7 @@ async function handleGetLive(request, env, raceId) {
   return json({
     current_location: live.current_location,
     track,
+    last_ping_at: live.last_ping_at || null,
   }, 200, request);
 }
 
