@@ -363,6 +363,20 @@ async function handleVerifyAuth(request, env) {
   return json({ result: "ok" }, 200, request);
 }
 
+async function handleGetRaceMeta(request, env, raceId) {
+  const authHeader = request.headers.get("Authorization") || "";
+  const match = authHeader.match(/^Bearer\s+(.+)$/);
+  if (!match || !isValidAdmin(match[1], env)) {
+    return error("Unauthorized", 401, request);
+  }
+
+  const metaRaw = await env.RACE_DATA.get(`race:${raceId}:meta`);
+  if (!metaRaw) return error("Race not found", 404, request);
+
+  const meta = JSON.parse(metaRaw);
+  return json({ token: meta.token }, 200, request);
+}
+
 async function handleGetRoute(request, env, raceId) {
   const metaRaw = await env.RACE_DATA.get(`race:${raceId}:meta`);
   if (!metaRaw) return error("Race not found", 404, request);
@@ -429,9 +443,12 @@ function matchRoute(method, path) {
     return { handler: "reset", raceId: resetMatch[1] };
   }
 
-  const deleteMatch = path.match(/^\/api\/race\/([a-z0-9]+)$/);
-  if (method === "DELETE" && deleteMatch) {
-    return { handler: "deleteRace", raceId: deleteMatch[1] };
+  const raceMatch = path.match(/^\/api\/race\/([a-z0-9]+)$/);
+  if (method === "GET" && raceMatch) {
+    return { handler: "raceMeta", raceId: raceMatch[1] };
+  }
+  if (method === "DELETE" && raceMatch) {
+    return { handler: "deleteRace", raceId: raceMatch[1] };
   }
 
   const routeMatch = path.match(/^\/api\/race\/([a-z0-9]+)\/route$/);
@@ -469,6 +486,8 @@ export default {
         return handleVerifyAuth(request, env);
       case "createRace":
         return handleCreateRace(request, env);
+      case "raceMeta":
+        return handleGetRaceMeta(request, env, matched.raceId);
       case "location":
         return handleLocationUpdate(request, env, matched.raceId);
       case "reset":
