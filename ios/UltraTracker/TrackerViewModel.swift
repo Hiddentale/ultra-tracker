@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 import CoreLocation
 
 private let POST_INTERVAL: TimeInterval = 30

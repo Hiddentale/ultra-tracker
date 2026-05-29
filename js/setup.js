@@ -196,8 +196,10 @@ document.getElementById("create-btn").addEventListener("click", async () => {
   btn.textContent = "Creating...";
 
   try {
-    const startTime = document.getElementById("start-time").value || null;
-    const endTime = document.getElementById("end-time").value || null;
+    const startRaw = document.getElementById("start-time").value;
+    const endRaw = document.getElementById("end-time").value;
+    const startTime = startRaw ? new Date(startRaw).toISOString() : null;
+    const endTime = endRaw ? new Date(endRaw).toISOString() : null;
     const result = await API.createRace(name, gpxString, aidStations, adminSecret, startTime, endTime);
 
     const resultEl = document.getElementById("result");
